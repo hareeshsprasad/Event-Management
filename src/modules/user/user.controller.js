@@ -1,13 +1,13 @@
 const User = require("./user.model");
-
+const bcrypt = require("bcryptjs");
 const getUsers = async (req, res) => {
   try {
     const {
-      search = "", // search keyword (for name/email)
-      sortBy = "firstName", // default sort field changed to firstName
-      order = "asc", // default ascending order
-      page = 1, // page number (default 1)
-      limit = 10, // items per page (default 10)
+      search = "", 
+      sortBy = "firstName", 
+      order = "asc",
+      page = 1, 
+      limit = 10, 
     } = req.query;
 
     const searchFilter = search
@@ -30,16 +30,9 @@ const getUsers = async (req, res) => {
       .skip(skip)
       .limit(Number(limit));
 
-    res.json({
+    res.status(200).json({
       message: "Users fetched successfully",
       data: users,
-      pagination: {
-        total,
-        page: Number(page),
-        limit: Number(limit),
-        totalPages: Math.ceil(total / limit),
-      },
-      status: 200,
     });
   } catch (err) {
     console.error(err);
@@ -104,6 +97,7 @@ const createUser = async (req, res) => {
     if (existingUser) {
       return res.status(409).json({ error: "Email already registered" });
     }
+    userData.password = await bcrypt.hash(userData.password,10);
     const { confirmPassword, ...finalData } = userData;
     const newUser = new User(finalData);
     await newUser.save();
